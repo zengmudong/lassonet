@@ -119,6 +119,12 @@ class LassoNet(nn.Module):
     def l1_regularization_skip(self):
         return torch.norm(self.skip.weight.data, p=2, dim=0).sum()
 
+    def l1_regularization_weighted_skip(self):
+        # Use for weighted Lasso
+        l1_nrom = torch.norm(self.skip.weight.data, p=2, dim=0)
+        weighted = l1_nrom * self.penalty_weights
+        return weighted.sum()
+
     def l2_regularization_skip(self):
         return torch.norm(self.skip.weight.data, p=2)
 
