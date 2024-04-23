@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import scale
 from sklearn.model_selection import train_test_split
@@ -9,15 +9,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from lassonet import LassoNetRegressor
+from lassonet.inference_adaptive import AdaptiveLassoNetRegressor
 
-
-dataset = load_boston()
-X = dataset.data
-y = dataset.target
+boston = fetch_openml(name='boston', version=1)
+X = boston['data']
+y = boston['target']
 _, true_features = X.shape
+feature_names = X.columns
 # add dummy feature
 X = np.concatenate([X, np.random.randn(*X.shape)], axis=1)
-feature_names = list(dataset.feature_names) + ["fake"] * true_features
+feature_names = list(feature_names) + ["fake"] * true_features
 
 # standardize
 X = StandardScaler().fit_transform(X)
@@ -26,12 +27,17 @@ y = scale(y)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y)
 
-model = LassoNetRegressor(
+# model = LassoNetRegressor(
+#     hidden_dims=(10,),
+#     verbose=True,
+#     patience=(100, 5),
+# )
+model = AdaptiveLassoNetRegressor(
     hidden_dims=(10,),
     verbose=True,
     patience=(100, 5),
 )
-path = model.path(X_train, y_train)
+path = model.path(X_train, y_train, return_state_dicts=True)
 
 n_selected = []
 mse = []
@@ -67,7 +73,7 @@ plt.xlabel("lambda")
 plt.xscale("log")
 plt.ylabel("number of selected features")
 
-plt.savefig("boston.png")
+plt.savefig("boston_scad.png")
 
 plt.clf()
 
@@ -104,4 +110,4 @@ plt.xticks(np.arange(n_features), ordered_feature_names, rotation=90)
 plt.legend(handles, labels)
 plt.ylabel("Feature order")
 
-plt.savefig("boston-bar.png")
+plt.savefig("boston-bar-scad.png")
