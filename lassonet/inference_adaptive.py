@@ -35,7 +35,7 @@ class AdaptiveLassoNet(BaseLassoNet):
         # tuning parameter "a" (or "gamma") use the default value 3.7
         if lamb == torch.inf:
             return 1
-        return 1 * (z<=lamb) + max( (a * lamb - z), 0) / ((a - 1) * lamb) * (lamb<z)
+        return lamb * (1 * (z<=lamb) + max( (a * lamb - z), 0) / ((a - 1) * lamb) * (lamb<z))
 
     def _train(
         self,
@@ -116,7 +116,7 @@ class AdaptiveLassoNet(BaseLassoNet):
 
                 optimizer.step(closure)
                 model.prox(
-                    lambda_=lambda_ * optimizer.param_groups[0]["lr"] * self.penalty_weights,
+                    lambda_=lambda_ * optimizer.param_groups[0]["lr"] * self.penalty_weights, #.repeat(self.M + 1, 1),
                     M=self.M,
                 )
 
@@ -240,7 +240,7 @@ class AdaptiveLassoNet(BaseLassoNet):
                 self.lambda_start_ = (
                     self.model.lambda_start(M=self.M)
                     / optimizer.param_groups[0]["lr"]
-                    / 20
+                    / 10
                 )
                 if self.verbose > 1:
                     print(f"lambda_start = {self.lambda_start_:.2e}")
@@ -270,8 +270,10 @@ class AdaptiveLassoNet(BaseLassoNet):
             )
             skip_weight = self.model.skip.weight.data.abs().squeeze()
             self.penalty_weights = torch.empty(skip_weight.shape[0])
+            n = len(X_train)
+            lambda0 = current_lambda / n
             for j in range(skip_weight.shape[0]):
-                self.penalty_weights[j] = self.scad_penalty(skip_weight[j], current_lambda)
+                self.penalty_weights[j] = self.scad_penalty(skip_weight[j], lambda0) / lambda0
             last = self._train(  # LLA Step 2
                 X_train,
                 y_train,
