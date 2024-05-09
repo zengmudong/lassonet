@@ -19,7 +19,7 @@ from sklearn.model_selection import check_cv, train_test_split
 from tqdm import tqdm
 
 from .cox import CoxPHLoss, concordance_index
-from .interfaces import BaseLassoNet, HistoryItem
+from .interfaces import BaseLassoNet, HistoryItem, LassoNetCoxRegressor
 from .model import LassoNet
 
 
@@ -53,7 +53,7 @@ class AdaptiveLassoNet(BaseLassoNet):
     ) -> HistoryItem:
         model = self.model
         if self.penalty_weights is None:
-            self.penalty_weights = torch.tensor([1.0] * X_train.shape[-1])
+            self.penalty_weights = torch.ones(X_train.shape[-1])
         def validation_obj():
             with torch.no_grad():
                 return (
@@ -269,10 +269,12 @@ class AdaptiveLassoNet(BaseLassoNet):
                 return_state_dict=return_state_dicts,
             )
             skip_weight = self.model.skip.weight.data.abs().squeeze()
-            self.penalty_weights = torch.empty(skip_weight.shape[0])
+            self.penalty_weights = torch.ones(skip_weight.shape[-1])
             n = len(X_train)
             lambda0 = current_lambda / n
-            for j in range(skip_weight.shape[0]):
+            if len(skip_weight.shape) > 1:
+                skip_weight = skip_weight.sum(0)
+            for j in range(skip_weight.shape[-1]):
                 self.penalty_weights[j] = self.scad_penalty(skip_weight[j], lambda0) / lambda0
             last = self._train(  # LLA Step 2
                 X_train,
@@ -357,7 +359,7 @@ class AdaptiveLassoNetClassifier(
     criterion = torch.nn.CrossEntropyLoss(reduction="mean")
 
     def __init__(self, class_weight=None, **kwargs):
-        BaseLassoNet.__init__(self, **kwargs)
+        AdaptiveLassoNet.__init__(self, **kwargs)
 
         self.class_weight = class_weight
 
@@ -367,7 +369,7 @@ class AdaptiveLassoNetClassifier(
                 weight=self.class_weight, reduction="mean"
             )
 
-    __init__.__doc__ = BaseLassoNet.__init__.__doc__
+    __init__.__doc__ = AdaptiveLassoNet.__init__.__doc__
 
     def _init_model(self, X, y):
         output_shape = self._output_shape(y)
@@ -400,3 +402,124 @@ class AdaptiveLassoNetClassifier(
         if isinstance(X, np.ndarray):
             ans = ans.cpu().numpy()
         return ans
+
+
+class BaseAdaptiveLassoNetCV(AdaptiveLassoNet, metaclass=ABCMeta):
+    def __init__(self, cv=None, **kwargs):
+        """
+        See BaseLassoNet for the parameters
+
+        cv : int, cross-validation generator or iterable, default=None
+            Determines the cross-validation splitting strategy.
+            Default is 5-fold cross-validation.
+            See <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html>
+        """
+        super().__init__(**kwargs)
+        self.cv = check_cv(cv)
+
+    def path(
+            self,
+            X,
+            y,
+            *,
+            return_state_dicts=True):
+        if hasattr(X, "to_numpy"):
+            X = X.to_numpy()
+        if hasattr(y, "to_numpy"):
+            y = y.to_numpy()
+
+        raw_lambdas_ = []
+        self.raw_scores_ = []
+        self.raw_paths_ = []
+
+        # TODO: parallelize
+        for train_index, test_index in tqdm(
+            self.cv.split(X, y),
+            total=self.cv.get_n_splits(X, y),
+            desc="Choosing lambda with cross-validation",
+            disable=self.verbose == 0,
+        ):
+            split_lambdas = []
+            split_scores = []
+            raw_lambdas_.append(split_lambdas)
+            self.raw_scores_.append(split_scores)
+
+            def callback(model, hist):
+                split_lambdas.append(hist[-1].lambda_)
+                split_scores.append(model.score(X[test_index], y[test_index]))
+
+            path = super().path(
+                X[train_index],
+                y[train_index],
+                return_state_dicts=False,  # avoid memory cost
+                callback=callback,
+            )
+            self.raw_paths_.append(path)
+
+        # build final path
+        lambda_ = min(sl[1] for sl in raw_lambdas_)
+        lambda_max = max(sl[-1] for sl in raw_lambdas_)
+        self.lambdas_ = []
+        while lambda_ < lambda_max:
+            self.lambdas_.append(lambda_)
+            lambda_ *= self.path_multiplier
+
+        # interpolate new scores
+        self.interp_scores_ = np.stack(
+            [
+                np.interp(np.log(self.lambdas_), np.log(sl[1:]), ss[1:])
+                for sl, ss in zip(raw_lambdas_, self.raw_scores_)
+            ],
+            axis=-1,
+        )
+
+        # select best lambda based on cross_validation
+        best_lambda_idx = np.nanargmax(self.interp_scores_.mean(axis=1))
+        self.best_lambda_ = self.lambdas_[best_lambda_idx]
+        self.best_cv_scores_ = self.interp_scores_[best_lambda_idx]
+        self.best_cv_score_ = self.best_cv_scores_.mean()
+
+        if self.lambda_start == "auto":
+            # forget the previously estimated lambda_start
+            self.lambda_start_ = self.lambdas_[0]
+
+        # train with the chosen lambda sequence
+        path = super().path(
+            X,
+            y,
+            lambda_seq=self.lambdas_[: best_lambda_idx + 1],
+            return_state_dicts=return_state_dicts,
+        )
+        if isinstance(self, LassoNetCoxRegressor) and not path[-1].selected.any():
+            # condition to retrain and avoid having 0 feature which gives score 0
+            # TODO: handle backtrack in path even when return_state_dicts=False
+            path = super().path(
+                X,
+                y,
+                lambda_seq=[h.lambda_ for h in path[1:-1]],
+                return_state_dicts=return_state_dicts,
+            )
+        self.path_ = path
+
+        self.best_selected_ = path[-1].selected
+        return path
+
+    def fit(
+        self,
+        X,
+        y,
+    ):
+        """Train the model.
+        Note that if `lambda_` is not given, the trained model
+        will most likely not use any feature.
+        """
+        self.path(X, y, return_state_dicts=False)
+        return self
+
+
+class AdaptiveLassoNetRegressorCV(BaseAdaptiveLassoNetCV, AdaptiveLassoNetRegressor):
+    pass
+
+
+class AdaptiveLassoNetClassifierCV(BaseAdaptiveLassoNetCV, AdaptiveLassoNetClassifier):
+    pass

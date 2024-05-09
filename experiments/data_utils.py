@@ -52,10 +52,10 @@ def load_mice(one_hot = False):
 
 
 def load_isolet():
-    x_train = np.genfromtxt('/home/lemisma/datasets/isolet/isolet1+2+3+4.data', delimiter = ',', usecols = range(0, 617), encoding = 'UTF-8')
-    y_train = np.genfromtxt('/home/lemisma/datasets/isolet/isolet1+2+3+4.data', delimiter = ',', usecols = [617], encoding = 'UTF-8')
-    x_test = np.genfromtxt('/home/lemisma/datasets/isolet/isolet5.data', delimiter = ',', usecols = range(0, 617), encoding = 'UTF-8')
-    y_test = np.genfromtxt('/home/lemisma/datasets/isolet/isolet5.data', delimiter = ',', usecols = [617], encoding = 'UTF-8')
+    x_train = np.genfromtxt('./examples/data/isolet/isolet1+2+3+4.data', delimiter = ',', usecols = range(0, 617), encoding = 'UTF-8')
+    y_train = np.genfromtxt('./examples/data/isolet/isolet1+2+3+4.data', delimiter = ',', usecols = [617], encoding = 'UTF-8')
+    x_test = np.genfromtxt('./examples/data/isolet/isolet5.data', delimiter = ',', usecols = range(0, 617), encoding = 'UTF-8')
+    y_test = np.genfromtxt('./examples/data/isolet/isolet5.data', delimiter = ',', usecols = [617], encoding = 'UTF-8')
     
     X = MinMaxScaler(feature_range=(0,1)).fit_transform(np.concatenate((x_train, x_test)))
     x_train = X[: len(y_train)]
@@ -92,7 +92,7 @@ def load_coil():
     samples = []
     for i in range(1, 21):
         for image_index in range(72):
-            obj_img = Image.open(os.path.join('/home/lemisma/datasets/coil-20-proc', 'obj%d__%d.png' % (i, image_index)))
+            obj_img = Image.open(os.path.join('./example/data/coil-20-proc', 'obj%d__%d.png' % (i, image_index)))
             rescaled = obj_img.resize((20,20))
             pixels_values = [float(x) for x in list(rescaled.getdata())]
             sample = np.array(pixels_values + [i])
@@ -187,10 +187,10 @@ def load_mnist_two_digits(digit1, digit2):
 import os
 from sklearn.preprocessing import MinMaxScaler
 def load_activity():
-    x_train = np.loadtxt(os.path.join('/home/lemisma/datasets/dataset_uci', 'final_X_train.txt'), delimiter = ',', encoding = 'UTF-8')
-    x_test = np.loadtxt(os.path.join('/home/lemisma/datasets/dataset_uci', 'final_X_test.txt'), delimiter = ',', encoding = 'UTF-8')
-    y_train = np.loadtxt(os.path.join('/home/lemisma/datasets/dataset_uci', 'final_y_train.txt'), delimiter = ',', encoding = 'UTF-8') - 1
-    y_test = np.loadtxt(os.path.join('/home/lemisma/datasets/dataset_uci', 'final_y_test.txt'), delimiter = ',', encoding = 'UTF-8') - 1
+    x_train = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_X_train.txt'), delimiter = ',', encoding = 'UTF-8')
+    x_test = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_X_test.txt'), delimiter = ',', encoding = 'UTF-8')
+    y_train = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_y_train.txt'), delimiter = ',', encoding = 'UTF-8') - 1
+    y_test = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_y_test.txt'), delimiter = ',', encoding = 'UTF-8') - 1
     
     X = MinMaxScaler(feature_range=(0,1)).fit_transform(np.concatenate((x_train, x_test)))
     x_train = X[: len(y_train)]

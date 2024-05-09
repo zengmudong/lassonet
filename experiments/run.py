@@ -5,7 +5,7 @@ from data_utils import load_dataset
 import torch
 import pickle
 
-seed = None
+seed = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 256
 K = 50 # Number of features to select
