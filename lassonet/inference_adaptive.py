@@ -24,10 +24,11 @@ from .model import LassoNet
 
 
 class AdaptiveLassoNet(BaseLassoNet):
-    def __init__(self, penalty_type='scad', **kwargs):
+    def __init__(self, penalty_type='scad', gpu_index=0, **kwargs):
         super().__init__(**kwargs)
         self.penalty_weights = None
         self.penalty_type = penalty_type
+        self.device = torch.device(f'cuda:{gpu_index}' if torch.cuda.is_available() else 'cpu')
 
     @staticmethod
     def scad_penalty(z, lamb, a=3.7):
@@ -53,7 +54,7 @@ class AdaptiveLassoNet(BaseLassoNet):
     ) -> HistoryItem:
         model = self.model
         if self.penalty_weights is None:
-            self.penalty_weights = torch.ones(X_train.shape[-1])
+            self.penalty_weights = torch.ones(X_train.shape[-1], device=self.device)
         def validation_obj():
             with torch.no_grad():
                 return (
@@ -269,7 +270,7 @@ class AdaptiveLassoNet(BaseLassoNet):
                 return_state_dict=return_state_dicts,
             )
             skip_weight = self.model.skip.weight.data.abs().squeeze()
-            self.penalty_weights = torch.ones(skip_weight.shape[-1])
+            self.penalty_weights = torch.ones(skip_weight.shape[-1], device=self.device)
             n = len(X_train)
             lambda0 = current_lambda / n
             if len(skip_weight.shape) > 1:
