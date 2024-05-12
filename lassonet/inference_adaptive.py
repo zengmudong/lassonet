@@ -24,11 +24,10 @@ from .model import LassoNet
 
 
 class AdaptiveLassoNet(BaseLassoNet):
-    def __init__(self, penalty_type='scad', gpu_index=0, **kwargs):
+    def __init__(self, penalty_type='scad', **kwargs):
         super().__init__(**kwargs)
         self.penalty_weights = None
         self.penalty_type = penalty_type
-        self.device = torch.device(f'cuda:{gpu_index}' if torch.cuda.is_available() else 'cpu')
 
     @staticmethod
     def scad_penalty(z, lamb, a=3.7):
