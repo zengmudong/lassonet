@@ -14,8 +14,8 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 def load_mice(one_hot = False):
     filling_value = -100000
-    X = np.genfromtxt('/home/lemisma/datasets/MICE/Data_Cortex_Nuclear.csv', delimiter = ',', skip_header = 1, usecols = range(1, 78), filling_values = filling_value, encoding = 'UTF-8')
-    classes = np.genfromtxt('/home/lemisma/datasets/MICE/Data_Cortex_Nuclear.csv', delimiter = ',', skip_header = 1, usecols = range(78, 81), dtype = None, encoding = 'UTF-8')
+    X = np.genfromtxt('./examples/Data_Cortex_Nuclear.csv', delimiter = ',', skip_header = 1, usecols = range(1, 78), filling_values = filling_value, encoding = 'UTF-8')
+    classes = np.genfromtxt('./examples/Data_Cortex_Nuclear.csv', delimiter = ',', skip_header = 1, usecols = range(78, 81), dtype = None, encoding = 'UTF-8')
 
     for i, row in enumerate(X):
         for j, val in enumerate(row):
@@ -71,8 +71,8 @@ import numpy as np
 def load_epileptic():
     filling_value = -100000
     
-    X = np.genfromtxt('/home/lemisma/datasets/data.csv', delimiter = ',', skip_header = 1, usecols = range(1, 179), filling_values = filling_value, encoding = 'UTF-8')
-    Y = np.genfromtxt('/homelemisma/datasets/data.csv', delimiter = ',', skip_header = 1, usecols = range(179, 180), encoding = 'UTF-8')
+    X = np.genfromtxt('./examples/datasets/data.csv', delimiter = ',', skip_header = 1, usecols = range(1, 179), filling_values = filling_value, encoding = 'UTF-8')
+    Y = np.genfromtxt('./examples/datasets/data.csv', delimiter = ',', skip_header = 1, usecols = range(179, 180), encoding = 'UTF-8')
     
     X = MinMaxScaler(feature_range=(0,1)).fit_transform(X)
     
