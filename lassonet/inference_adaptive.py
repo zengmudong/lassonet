@@ -268,26 +268,28 @@ class AdaptiveLassoNet(BaseLassoNet):
                 patience=self.patience_path,
                 return_state_dict=return_state_dicts,
             )
-            skip_weight = self.model.skip.weight.data.abs().squeeze()
-            self.penalty_weights = torch.ones(skip_weight.shape[-1], device=self.device)
-            n = len(X_train)
-            lambda0 = current_lambda / n
-            if len(skip_weight.shape) > 1:
-                skip_weight = skip_weight.sum(0)
-            for j in range(skip_weight.shape[-1]):
-                self.penalty_weights[j] = self.scad_penalty(skip_weight[j], lambda0) / lambda0
-            last = self._train(  # LLA Step 2
-                X_train,
-                y_train,
-                X_val,
-                y_val,
-                batch_size=self.batch_size,
-                lambda_=current_lambda,
-                epochs=self.n_iters_path,
-                optimizer=optimizer,
-                patience=self.patience_path,
-                return_state_dict=return_state_dicts,
-            )
+            if current_lambda > 0:
+                # Do not run LLA step 2 when lambda is 0
+                skip_weight = self.model.skip.weight.data.abs().squeeze()
+                self.penalty_weights = torch.ones(skip_weight.shape[-1], device=self.device)
+                n = len(X_train)
+                lambda0 = current_lambda / n
+                if len(skip_weight.shape) > 1:
+                    skip_weight = skip_weight.sum(0)
+                for j in range(skip_weight.shape[-1]):
+                    self.penalty_weights[j] = self.scad_penalty(skip_weight[j], lambda0) / lambda0
+                last = self._train(  # LLA Step 2
+                    X_train,
+                    y_train,
+                    X_val,
+                    y_val,
+                    batch_size=self.batch_size,
+                    lambda_=current_lambda,
+                    epochs=self.n_iters_path,
+                    optimizer=optimizer,
+                    patience=self.patience_path,
+                    return_state_dict=return_state_dicts,
+                )
             if is_dense and self.model.selected_count() < X_train.shape[1]:
                 is_dense = False
                 if not disable_lambda_warning and current_lambda < 2 * lambda_start:
