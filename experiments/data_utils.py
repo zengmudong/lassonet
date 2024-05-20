@@ -48,7 +48,7 @@ def load_mice(one_hot = False):
     
     print("X shape: {}, Y shape: {}".format(X.shape, Y.shape))
 
-    return (X[: X.shape[0] * 4 // 5], Y[: X.shape[0] * 4 // 5]), (X[X.shape[0] * 4 // 5:], Y[X.shape[0] * 4 // 5: ])
+    return (X[: X.shape[0] * 9 // 10], Y[: X.shape[0] * 9 // 10]), (X[X.shape[0] * 9 // 10:], Y[X.shape[0] * 9 // 10: ])
 
 
 def load_isolet():
@@ -92,7 +92,7 @@ def load_coil():
     samples = []
     for i in range(1, 21):
         for image_index in range(72):
-            obj_img = Image.open(os.path.join('./example/data/coil-20-proc', 'obj%d__%d.png' % (i, image_index)))
+            obj_img = Image.open(os.path.join('./examples/data/coil-20-proc', 'obj%d__%d.png' % (i, image_index)))
             rescaled = obj_img.resize((20,20))
             pixels_values = [float(x) for x in list(rescaled.getdata())]
             sample = np.array(pixels_values + [i])
@@ -103,7 +103,7 @@ def load_coil():
     targets = (samples[:, -1] + 0.5).astype(np.int64)
     data = (data - data.min()) / (data.max() - data.min())
     
-    l = data.shape[0] * 4 // 5
+    l = data.shape[0] * 9 // 10
     train = (data[:l], targets[:l]-1)
     test = (data[l:], targets[l:]-1)
     print(train[0].shape, train[1].shape)
@@ -150,13 +150,13 @@ def load_data(fashion = False, digit = None, normalize = False):
 
 def load_mnist():
     train, test = load_data(fashion = False, normalize = True)
-    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.1)
     return (x_train, y_train), (x_test, y_test)
 
 
 def load_fashion():
     train, test = load_data(fashion = True, normalize = True)
-    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.1)
     return (x_train, y_train), (x_test, y_test)
 
 def load_mnist_two_digits(digit1, digit2):
@@ -187,10 +187,10 @@ def load_mnist_two_digits(digit1, digit2):
 import os
 from sklearn.preprocessing import MinMaxScaler
 def load_activity():
-    x_train = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_X_train.txt'), delimiter = ',', encoding = 'UTF-8')
-    x_test = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_X_test.txt'), delimiter = ',', encoding = 'UTF-8')
-    y_train = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_y_train.txt'), delimiter = ',', encoding = 'UTF-8') - 1
-    y_test = np.loadtxt(os.path.join('./example/data/dataset_uci', 'final_y_test.txt'), delimiter = ',', encoding = 'UTF-8') - 1
+    x_train = np.loadtxt(os.path.join('./examples/data/dataset_uci', 'final_X_train.txt'), encoding = 'UTF-8')
+    x_test = np.loadtxt(os.path.join('./examples/data/dataset_uci', 'final_X_test.txt'), encoding = 'UTF-8')
+    y_train = np.loadtxt(os.path.join('./examples/data/dataset_uci', 'final_y_train.txt'), encoding = 'UTF-8') - 1
+    y_test = np.loadtxt(os.path.join('./examples/data/dataset_uci', 'final_y_test.txt'), encoding = 'UTF-8') - 1
     
     X = MinMaxScaler(feature_range=(0,1)).fit_transform(np.concatenate((x_train, x_test)))
     x_train = X[: len(y_train)]
