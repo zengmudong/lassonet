@@ -256,6 +256,7 @@ class AdaptiveLassoNet(BaseLassoNet):
         for current_lambda in itertools.chain([lambda_start], lambda_seq):
             if self.model.selected_count() == 0:
                 break
+            self.penalty_weights = None
             last = self._train(  # LLA Step 1
                 X_train,
                 y_train,
