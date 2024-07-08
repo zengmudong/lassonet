@@ -8,7 +8,7 @@ from lassonet.utils import eval_on_path
 class MarginalFeatures:
     def __init__(self, X, y, lassonet, epochs=1000):
         self.lassonet = lassonet
-        self.X, self.y = lassonet._cast_input(X, y)
+        self.X, self.y = X, y
         self.data_dim = X.shape[1]
         self.n_samples = X.shape[0]
         self.loss = lassonet.criterion
