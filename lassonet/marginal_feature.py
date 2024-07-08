@@ -121,7 +121,7 @@ class MarginalFeatures:
         self.path = model.path(X_train_marginal, self.y, X_val=X_val_marginal, y_val=y_val, return_state_dicts=True)
         # Select the features
         if K_list is None:
-            K_list = [50, int(50 * np.log(self.output_shape)), 50 * self.output_shape]
+            K_list = [50, int(50 * np.log(self.output_shape)), 50 * self.output_shape, X_train_marginal.shape[1]]
         for K in K_list:
             desired_save = next(save for save in self.path if save.selected.sum().item() <= K)
             SELECTED_FEATURES = desired_save.selected
