@@ -53,8 +53,8 @@ with open(f'{dataset}_path.pkl', 'wb') as f:
 
 ################################################################
 
-# Initialize the LassoNetClassifier model and compute the path
-adaptive_lasso_model = AdaptiveLassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=2, torch_seed=seed, random_state=seed, device=device, n_iters=n_epochs, batch_size=batch_size, path_multiplier=1.1)
+# Initialize the adaptive LassoNetClassifier model and compute the path
+adaptive_lasso_model = AdaptiveLassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed, random_state=seed, device=device, n_iters=n_epochs, batch_size=batch_size, path_multiplier=1.1)
 adaptive_path = adaptive_lasso_model.path(X_train, y_train, X_val=X_val, y_val=y_val)
 
 # Select the features
