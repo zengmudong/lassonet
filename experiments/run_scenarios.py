@@ -59,12 +59,12 @@ def run_helper(dataset: str, seed: int = 2):
         score = eval_on_path(lasso_sparse, path_sparse, X_test_selected, y_test)
         print(f"LassoNet K = {K}, Test accuracy:", score)
         # collect results, considering 4 scenarios and make it easy to plot
-        collect_results["test_accuracy"]["LassoNet"] = {K: score}
+        collect_results["test_accuracy"]["LassoNet"][str(K)] = score
 
     # Scenario 2: SCADNet via AdaptiveLassoNet
     adaptive_lasso_model = AdaptiveLassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed,
                                                       random_state=seed, device=device, n_iters=n_epochs,
-                                                      batch_size=batch_size, path_multiplier=1.1)
+                                                      batch_size=batch_size, path_multiplier=1.02)
     adaptive_path = adaptive_lasso_model.path(X_train, y_train, X_val=X_val, y_val=y_val)
 
     for K in K_list:
@@ -86,7 +86,7 @@ def run_helper(dataset: str, seed: int = 2):
 
         # Evaluate the model on the test data
         score = eval_on_path(adaptive_lasso_sparse, adaptive_path_sparse, X_test_selected_adaptive, y_test)
-        collect_results["test_accuracy"]["SCADNet"] = {str(K): score}
+        collect_results["test_accuracy"]["SCADNet"][str(K)] = score
 
     # Scenario 3: MarginalFeatures
     lasso_model_marginal = LassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed, random_state=seed, device=device, n_iters=n_epochs, batch_size=batch_size)
@@ -101,7 +101,7 @@ def run_helper(dataset: str, seed: int = 2):
     # Scenario 4: MarginalFeatures_SCADNet
     adaptive_lasso_model = AdaptiveLassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed,
                                                       random_state=seed, device=device, n_iters=n_epochs,
-                                                      batch_size=batch_size, path_multiplier=1.05)
+                                                      batch_size=batch_size, path_multiplier=1.02)
     adaptive_lasso_sparse = LassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed,
                                                random_state=seed, device=device, n_iters=n_epochs)
     marginal_feature = MarginalFeatures(X_train, y_train, lassonet=adaptive_lasso_model)
