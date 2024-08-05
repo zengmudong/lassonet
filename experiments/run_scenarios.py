@@ -16,7 +16,7 @@ def run_helper(dataset: str, seed: int = 2):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Using ", device)
     batch_size = 256
-    n_epochs = 10
+    n_epochs = 1000
     # Number of features to be selected
     K_list = [5, 10 , 15, 20, 50]
 
