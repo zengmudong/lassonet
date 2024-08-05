@@ -120,7 +120,7 @@ class MarginalFeatures:
         """
         X_train_marginal, X_val_marginal, X_test_marginal = self.data_helper(X_val, X_test)
         self.path = model.path(X_train_marginal, self.y, X_val=X_val_marginal, y_val=y_val, return_state_dicts=True)
-        collect_results = []
+        collect_results = {}
         # Select the features
         if K_list is None:
             K_list = [50, int(50 * np.log(self.output_shape)), 50 * self.output_shape, X_train_marginal.shape[1]]
