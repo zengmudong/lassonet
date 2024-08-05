@@ -46,9 +46,10 @@ for K in K_list:
 
     # Evaluate the model on the test data
     score = eval_on_path(lasso_sparse, path_sparse, X_test_selected, y_test)
-    print(f"K = {K}, Test accuracy:", score)
+    print(f"LassoNet K = {K}, Test accuracy:", score)
 
 # Initialize the LassoNetClassifier model and compute the path
+print("-----------------------------------")
 adaptive_lasso_model = AdaptiveLassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed, random_state=seed, device=device, n_iters=n_epochs, batch_size=batch_size, path_multiplier=1.05)
 adaptive_lasso_sparse = LassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed, random_state=seed, device=device, n_iters=n_epochs)
 marginal_feature = MarginalFeatures(X_train, y_train, lassonet=adaptive_lasso_model)
