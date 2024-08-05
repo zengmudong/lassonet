@@ -105,7 +105,7 @@ def run_helper(dataset: str, seed: int = 2):
     adaptive_lasso_sparse = LassoNetClassifier(M=10, hidden_dims=hidden_dim, verbose=1, torch_seed=seed,
                                                random_state=seed, device=device, n_iters=n_epochs)
     marginal_feature = MarginalFeatures(X_train, y_train, lassonet=adaptive_lasso_model)
-    collect_results["test_accuracy"]["MarginalFeatures"] = marginal_feature.run_helper(adaptive_lasso_model,
+    collect_results["test_accuracy"]["MarginalFeatures_SCADNet"] = marginal_feature.run_helper(adaptive_lasso_model,
                                                                                        adaptive_lasso_sparse,
                                                                                        X_val, y_val, X_test, y_test,
                                                                                        K_list=K_list)

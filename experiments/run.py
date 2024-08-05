@@ -79,3 +79,4 @@ print("Test accuracy SCAD:", score)
 # Save the path
 # with open(f'{dataset}_scad_path.pkl', 'wb') as f:
 #     pickle.dump(adaptive_path_sparse, f)
+
